@@ -6,60 +6,86 @@
         label { font-weight: bold; display: block; margin-top: 15px; }
         input, select { width: 200px; margin-bottom: 5px; }
         small { color: gray; display: block; }
+        .error { color: red; font-weight: bold; margin-top: 20px; }
+        #quotes-display {
+            display: none;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 10px;
+            max-height: 200px;
+            overflow: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
+
 <body>
     <h1>Quantitative Finance Break-Funding Tool</h1>
 
+    {% if error_message %}
+        <div class="error">⚠️ {{ error_message }}</div>
+    {% endif %}
+
     <form method="POST" enctype="multipart/form-data">
+        <!-- Upload -->
         <label for="pdf">Upload Term Sheet (PDF):</label>
         <input type="file" name="pdf" accept=".pdf"><br><br>
 
+        <!-- Upload button to show extracted quotes -->
+        <button type="button" id="show-quotes-btn">Upload</button>
+
+        <!-- Container to display extracted quotes, hidden by default -->
+        <pre id="quotes-display" style="display:none; background:#f9f9f9; border:1px solid #ccc; padding:10px; max-height:200px; overflow:auto;"></pre>
+
+
         <!-- Effective Date -->
         <label for="effective_date">Effective Date:</label>
-        <input type="date" name="effective_date" value="{{ request.form.effective_date or extracted.effective_date }}">
-        <small>{{ extracted_quotes.effective_date }}</small>
+        <input type="date" name="effective_date" value="{{ effective_date }}" required>
+        <small>{{ extracted_quotes.effective_date or '' }}</small>
 
         <!-- Maturity Date -->
         <label for="maturity_date">Maturity Date:</label>
-        <input type="date" name="maturity_date" value="{{ request.form.maturity_date or extracted.maturity_date }}">
-        <small>{{ extracted_quotes.maturity_date }}</small>
+        <input type="date" name="maturity_date" value="{{ maturity_date }}" required>
+        <small>{{ extracted_quotes.maturity_date or '' }}</small>
 
         <!-- Frequency -->
         <label for="frequency">Frequency:</label>
-        <select name="frequency">
+        <select name="frequency" required>
             {% for f in ['monthly', 'quarterly', 'semiannual', 'annual'] %}
-                <option value="{{ f }}" {% if (request.form.frequency or extracted.frequency) == f %}selected{% endif %}>{{ f.capitalize() }}</option>
+                <option value="{{ f }}" {% if frequency == f %}selected{% endif %}>{{ f.capitalize() }}</option>
             {% endfor %}
         </select>
-        <small>{{ extracted_quotes.frequency }}</small>
+        <small>{{ extracted_quotes.frequency or '' }}</small>
 
         <!-- Amortization Type -->
         <label for="amortization_type">Amortization Type:</label>
-        <select name="amortization_type">
+        <select name="amortization_type" required>
             {% for t in ['interest only', 'equal', 'linear', 'custom'] %}
-                <option value="{{ t }}" {% if (request.form.amortization_type or extracted.amortization_type) == t %}selected{% endif %}>{{ t.capitalize() }}</option>
+                <option value="{{ t }}" {% if amortization_type == t %}selected{% endif %}>{{ t.capitalize() }}</option>
             {% endfor %}
         </select>
-        <small>{{ extracted_quotes.amortization_type }}</small>
+        <small>{{ extracted_quotes.amortization_type or '' }}</small>
 
         <!-- Loan Rate -->
         <label for="loan_rate">Loan Rate (%):</label>
-        <input type="number" step="0.01" name="loan_rate" value="{{ request.form.loan_rate or extracted.loan_rate }}">
-        <small>{{ extracted_quotes.loan_rate }}</small>
+        <input type="number" step="0.01" name="loan_rate" value="{{ loan_rate }}" required>
+        <small>{{ extracted_quotes.loan_rate or '' }}</small>
 
         <!-- Balance -->
         <label for="balance">Balance:</label>
-        <input type="number" step="0.01" name="balance" value="{{ request.form.balance or extracted.balance }}">
-        <small>{{ extracted_quotes.balance }}</small>
+        <input type="number" step="0.01" name="balance" value="{{ balance }}" required>
+        <small>{{ extracted_quotes.balance or '' }}</small>
 
-        <!-- Prepayment Date (user input only, no extracted value or quote) -->
+        <!-- Prepayment Date -->
         <label for="prepayment_date">Prepayment Date:</label>
-        <input type="date" name="prepayment_date" value="{{ request.form.prepayment_date or '' }}">
+        <input type="date" name="prepayment_date" value="{{ prepayment_date }}" required>
 
-        <!-- Prepayment Amount (user input only) -->
+        <!-- Prepayment Amount -->
         <label for="prepayment_amount">Prepayment Amount:</label>
-        <input type="number" step="0.01" name="prepayment_amount" value="{{ request.form.prepayment_amount or '' }}">
+        <input type="number" step="0.01" name="prepayment_amount" value="{{ prepayment_amount }}" required>
 
         <br><br>
         <button type="submit">Calculate</button>
@@ -76,5 +102,22 @@
         <h2>Cashflow Plot</h2>
         <img src="{{ url_for('static', filename='plot.png') }}" alt="Cashflow Plot">
     {% endif %}
+
+    <script>
+    document.getElementById('show-quotes-btn').addEventListener('click', function() {
+        const displayDiv = document.getElementById('quotes-display');
+        if (displayDiv.style.display === 'none') {
+            // Show and populate the quotes display with pretty JSON
+            const quotes = {{ extracted_quotes | tojson }};
+            displayDiv.textContent = JSON.stringify(quotes, null, 2);
+            displayDiv.style.display = 'block';
+            this.textContent = 'Hide Extracted Quotes';
+        } else {
+            // Hide the quotes display
+            displayDiv.style.display = 'none';
+            this.textContent = 'Upload';
+        }
+    });
+    </script>
 </body>
 </html>
