@@ -2,61 +2,66 @@
 <html>
 <head>
     <title>Quantitative Finance Break-Funding Tool</title>
+    <style>
+        label { font-weight: bold; display: block; margin-top: 15px; }
+        input, select { width: 200px; margin-bottom: 5px; }
+        small { color: gray; display: block; }
+    </style>
 </head>
 <body>
     <h1>Quantitative Finance Break-Funding Tool</h1>
-    
-    <form method="POST">
+
+    <form method="POST" enctype="multipart/form-data">
+        <label for="pdf">Upload Term Sheet (PDF):</label>
+        <input type="file" name="pdf" accept=".pdf"><br><br>
+
         <!-- Effective Date -->
         <label for="effective_date">Effective Date:</label>
-        <input type="date" id="effective_date" name="effective_date"
-               value="{{ request.form.effective_date or '' }}" required><br><br>
+        <input type="date" name="effective_date" value="{{ request.form.effective_date or extracted.effective_date }}">
+        <small>{{ extracted_quotes.effective_date }}</small>
 
         <!-- Maturity Date -->
         <label for="maturity_date">Maturity Date:</label>
-        <input type="date" id="maturity_date" name="maturity_date"
-               value="{{ request.form.maturity_date or '' }}" required><br><br>
-
-        <!-- Balance -->
-        <label for="balance">Balance:</label>
-        <input type="number" id="balance" name="balance" step="0.01"
-               value="{{ request.form.balance or '' }}" required><br><br>
+        <input type="date" name="maturity_date" value="{{ request.form.maturity_date or extracted.maturity_date }}">
+        <small>{{ extracted_quotes.maturity_date }}</small>
 
         <!-- Frequency -->
         <label for="frequency">Frequency:</label>
-        <select id="frequency" name="frequency">
-            {% for freq in ['monthly', 'quarterly', 'semiannual', 'annual'] %}
-                <option value="{{ freq }}" {% if request.form.frequency == freq %}selected{% endif %}>
-                    {{ freq.capitalize() }}
-                </option>
+        <select name="frequency">
+            {% for f in ['monthly', 'quarterly', 'semiannual', 'annual'] %}
+                <option value="{{ f }}" {% if (request.form.frequency or extracted.frequency) == f %}selected{% endif %}>{{ f.capitalize() }}</option>
             {% endfor %}
-        </select><br><br>
+        </select>
+        <small>{{ extracted_quotes.frequency }}</small>
 
         <!-- Amortization Type -->
         <label for="amortization_type">Amortization Type:</label>
-        <select id="amortization_type" name="amortization_type">
-            {% for option in ['interest only', 'equal', 'linear', 'custom'] %}
-                <option value="{{ option }}" {% if request.form.amortization_type == option %}selected{% endif %}>
-                    {{ option.capitalize() }}
-                </option>
+        <select name="amortization_type">
+            {% for t in ['interest only', 'equal', 'linear', 'custom'] %}
+                <option value="{{ t }}" {% if (request.form.amortization_type or extracted.amortization_type) == t %}selected{% endif %}>{{ t.capitalize() }}</option>
             {% endfor %}
-        </select><br><br>
+        </select>
+        <small>{{ extracted_quotes.amortization_type }}</small>
 
         <!-- Loan Rate -->
         <label for="loan_rate">Loan Rate (%):</label>
-        <input type="number" id="loan_rate" name="loan_rate" step="0.01"
-               value="{{ request.form.loan_rate or '' }}" required><br><br>
+        <input type="number" step="0.01" name="loan_rate" value="{{ request.form.loan_rate or extracted.loan_rate }}">
+        <small>{{ extracted_quotes.loan_rate }}</small>
 
-        <!-- Prepayment Date -->
+        <!-- Balance -->
+        <label for="balance">Balance:</label>
+        <input type="number" step="0.01" name="balance" value="{{ request.form.balance or extracted.balance }}">
+        <small>{{ extracted_quotes.balance }}</small>
+
+        <!-- Prepayment Date (user input only, no extracted value or quote) -->
         <label for="prepayment_date">Prepayment Date:</label>
-        <input type="date" id="prepayment_date" name="prepayment_date"
-               value="{{ request.form.prepayment_date or '' }}" required><br><br>
+        <input type="date" name="prepayment_date" value="{{ request.form.prepayment_date or '' }}">
 
-        <!-- Prepayment Amount -->
+        <!-- Prepayment Amount (user input only) -->
         <label for="prepayment_amount">Prepayment Amount:</label>
-        <input type="number" id="prepayment_amount" name="prepayment_amount" step="0.01"
-               value="{{ request.form.prepayment_amount or '' }}" required><br><br>
+        <input type="number" step="0.01" name="prepayment_amount" value="{{ request.form.prepayment_amount or '' }}">
 
+        <br><br>
         <button type="submit">Calculate</button>
     </form>
 

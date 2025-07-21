@@ -1,36 +1,44 @@
 import os
-from flask import Flask, render_template, request
+from flask import Flask, request, render_template
 from calculations import generate_cashflow_plot
+from extract_from_pdf import extract_loan_terms
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'uploads'
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    extracted = {}
+    extracted_quotes = {}
     plot_generated = False
 
     if request.method == 'POST':
-        try:
-            # Extract form values from request
-            data = {
-                'effective_date': request.form['effective_date'],
-                'maturity_date': request.form['maturity_date'],
-                'frequency': request.form['frequency'],
-                'amortization_type': request.form['amortization_type'],
-                'loan_rate': float(request.form['loan_rate']),
-                'balance': float(request.form['balance']),
-                'prepayment_date': request.form['prepayment_date'],
-                'prepayment_amount': float(request.form['prepayment_amount'])
-            }
+        # If PDF uploaded, extract terms
+        if 'pdf' in request.files and request.files['pdf'].filename.endswith('.pdf'):
+            pdf_file = request.files['pdf']
+            extracted, extracted_quotes = extract_loan_terms(pdf_file)
 
-            # Call plotting function
+        # Combine user inputs with extracted values (user can override)
+        def get_field(field, cast=str):
+            return cast(request.form.get(field) or extracted.get(field) or "")
+
+        data = {
+            'effective_date': get_field('effective_date'),
+            'maturity_date': get_field('maturity_date'),
+            'frequency': get_field('frequency'),
+            'amortization_type': get_field('amortization_type'),
+            'loan_rate': get_field('loan_rate', float),
+            'balance': get_field('balance', float),
+            'prepayment_date': request.form.get('prepayment_date'),       # user only
+            'prepayment_amount': float(request.form.get('prepayment_amount') or 0),  # user only
+        }
+
+        # Generate plot only if everything is filled
+        if all(data.values()):
             generate_cashflow_plot(data)
             plot_generated = True
 
-        except Exception as e:
-            print(f"Error: {e}")
-            plot_generated = False
-
-    return render_template('index.html', plot_generated=plot_generated)
+    return render_template("index.html", extracted=extracted, extracted_quotes=extracted_quotes, plot_generated=plot_generated)
 
 # For deployment (e.g., Render.com)
 if __name__ == '__main__':

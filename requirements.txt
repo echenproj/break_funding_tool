@@ -1,3 +1,9 @@
 flask
+openai
+PyMuPDF
 matplotlib
+python-dateutil
 gunicorn
+torch
+transformers
+accelerate
