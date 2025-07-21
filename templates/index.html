@@ -7,35 +7,55 @@
     <h1>Quantitative Finance Break-Funding Tool</h1>
     
     <form method="POST">
+        <!-- Effective Date -->
         <label for="effective_date">Effective Date:</label>
-        <input type="date" id="effective_date" name="effective_date" required><br><br>
+        <input type="date" id="effective_date" name="effective_date"
+               value="{{ request.form.effective_date or '' }}" required><br><br>
 
+        <!-- Maturity Date -->
         <label for="maturity_date">Maturity Date:</label>
-        <input type="date" id="maturity_date" name="maturity_date" required><br><br>
+        <input type="date" id="maturity_date" name="maturity_date"
+               value="{{ request.form.maturity_date or '' }}" required><br><br>
 
+        <!-- Balance -->
+        <label for="balance">Balance:</label>
+        <input type="number" id="balance" name="balance" step="0.01"
+               value="{{ request.form.balance or '' }}" required><br><br>
+
+        <!-- Frequency -->
         <label for="frequency">Frequency:</label>
         <select id="frequency" name="frequency">
-            <option value="monthly">Monthly</option>
-            <option value="quarterly">Quarterly</option>
-            <option value="semiannual">Semi-Annual</option>
-            <option value="annual">Annual</option>
+            {% for freq in ['monthly', 'quarterly', 'semiannual', 'annual'] %}
+                <option value="{{ freq }}" {% if request.form.frequency == freq %}selected{% endif %}>
+                    {{ freq.capitalize() }}
+                </option>
+            {% endfor %}
         </select><br><br>
 
+        <!-- Amortization Type -->
         <label for="amortization_type">Amortization Type:</label>
         <select id="amortization_type" name="amortization_type">
-            <option value="linear">Linear</option>
-            <option value="bullet">Bullet</option>
-            <option value="custom">Custom</option>
+            {% for option in ['interest only', 'equal', 'linear', 'custom'] %}
+                <option value="{{ option }}" {% if request.form.amortization_type == option %}selected{% endif %}>
+                    {{ option.capitalize() }}
+                </option>
+            {% endfor %}
         </select><br><br>
 
+        <!-- Loan Rate -->
         <label for="loan_rate">Loan Rate (%):</label>
-        <input type="number" id="loan_rate" name="loan_rate" step="0.01" required><br><br>
+        <input type="number" id="loan_rate" name="loan_rate" step="0.01"
+               value="{{ request.form.loan_rate or '' }}" required><br><br>
 
+        <!-- Prepayment Date -->
         <label for="prepayment_date">Prepayment Date:</label>
-        <input type="date" id="prepayment_date" name="prepayment_date" required><br><br>
+        <input type="date" id="prepayment_date" name="prepayment_date"
+               value="{{ request.form.prepayment_date or '' }}" required><br><br>
 
+        <!-- Prepayment Amount -->
         <label for="prepayment_amount">Prepayment Amount:</label>
-        <input type="number" id="prepayment_amount" name="prepayment_amount" step="0.01" required><br><br>
+        <input type="number" id="prepayment_amount" name="prepayment_amount" step="0.01"
+               value="{{ request.form.prepayment_amount or '' }}" required><br><br>
 
         <button type="submit">Calculate</button>
     </form>
