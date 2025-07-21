@@ -35,10 +35,10 @@
         <input type="file" name="pdf" accept=".pdf"><br><br>
 
         <!-- Upload button to show extracted quotes -->
-        <button type="button" id="show-quotes-btn">Upload</button>
+        <button type="submit" name="action" value="upload">Upload</button>
 
         <!-- Container to display extracted quotes, hidden by default -->
-        <pre id="quotes-display" style="display:none; background:#f9f9f9; border:1px solid #ccc; padding:10px; max-height:200px; overflow:auto;"></pre>
+        <!-- <pre id="quotes-display" style="display:none; background:#f9f9f9; border:1px solid #ccc; padding:10px; max-height:200px; overflow:auto;"></pre> -->
 
 
         <!-- Effective Date -->
@@ -88,8 +88,14 @@
         <input type="number" step="0.01" name="prepayment_amount" value="{{ prepayment_amount }}" required>
 
         <br><br>
-        <button type="submit">Calculate</button>
+        <button type="submit" name="action" value="calculate">Calculate</button>
     </form>
+
+    <!-- {% if debug_effective_date %}
+    <p style="margin-top: 20px; font-style: italic; color: darkgreen;">
+        Extracted Effective Date: {{ debug_effective_date }}
+    </p>
+    {% endif %} -->
 
     {% if break_funding_cost is not none %}
         <h3>Break Funding Cost</h3>
@@ -102,7 +108,7 @@
         <h2>Cashflow Plot</h2>
         <img src="{{ url_for('static', filename='plot.png') }}" alt="Cashflow Plot">
     {% endif %}
-
+<!-- 
     <script>
     document.getElementById('show-quotes-btn').addEventListener('click', function() {
         const displayDiv = document.getElementById('quotes-display');
@@ -117,7 +123,7 @@
             displayDiv.style.display = 'none';
             this.textContent = 'Upload';
         }
-    });
+    }); -->
     </script>
 </body>
 </html>

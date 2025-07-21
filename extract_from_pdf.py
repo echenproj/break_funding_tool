@@ -27,31 +27,64 @@ def extract_text_from_pdf(pdf_file) -> str:
     return full_text
 
 
-def ask_field_info(pdf_text: str, field: str) -> dict:
+def ask_all_fields(pdf_text: str) -> list[dict]:
     """
-    Query a conversational model to extract a specific field's value and a supporting quote.
+    Send one prompt to the model to extract all field values and their quotes.
+    Returns a list of dicts: [{ key, value, quote }, ...]
+    """
+    field_list_str = ", ".join(FIELDS)
 
-    Returns:
-        dict: { "value": ..., "quote": ... }
-    """
     messages = [
         {
             "role": "system",
-            "content": "You are a helpful assistant that extracts financial data from term sheets. "
-                       "Your job is to find specific loan terms and provide the value with a quote from the text."
+            "content": (
+                "You are a helpful assistant that extracts financial data from term sheets. "
+                "Your job is to find specific loan terms and provide their values along with supporting quotes. "
+                "The quote should be a real excerpt from the text that shows where the value came from."
+            )
         },
         {
             "role": "user",
-            "content": f"""Extract the **{field}** from the following text and give a supporting quote.
+            "content": f"""Extract the following fields from the text: {field_list_str}.
 
-Respond in this JSON format:
+
+Respond in this JSON format, with double quotes:
+[
 {{
-  "value": "...",
+  "key": "Effective Date",
+  "value": "MM/DD/YYYY",
+  "quote": "..."
+}},
+{{
+  "key": "Maturity Date",
+  "value": "MM/DD/YYYY",
+  "quote": "..."
+}},
+{{
+  "key": "Frequency",
+  "value": "...", One of Monthly, Quarterly, Semiannual, Annual
+  "quote": "..."
+}},
+{{
+  "key": "Amortization Type",
+  "value": "...", One of Interest only, Equal, Linear, Custom
+  "quote": "..."
+}},
+{{
+  "key": "Loan Rate",
+  "value": "...", A number in percent. Do not include percent sign
+  "quote": "..."
+}},
+{{
+  "key": "Balance",
+  "value": "...", A number, ignore currency
   "quote": "..."
 }}
+]
 
 Text:
-\"\"\"{pdf_text[:2000]}\"\"\""""
+\"\"\"{pdf_text}\"\"\"
+"""
         }
     ]
 
@@ -61,47 +94,38 @@ Text:
             temperature=0,
         )
 
-        json_start = response.content.find('{')
-        json_end = response.content.rfind('}') + 1
+        content = response.choices[0].message.content
+        json_start = content.find('[')
+        json_end = content.rfind(']') + 1
 
         if json_start == -1 or json_end == -1:
-            raise ValueError("JSON output not found in model response")
+            raise ValueError("JSON array not found in model response")
 
-        json_str = response.content[json_start:json_end]
+        json_str = content[json_start:json_end]
         parsed = json.loads(json_str)
-
-        return {
-            "value": parsed.get("value", "").strip(),
-            "quote": parsed.get("quote", "").strip() or "No supporting quote found"
-        }
-
+        return parsed
+    
     except Exception as e:
-        return {
-            "value": "",
-            "quote": f"Error during extraction: {str(e)}"
-        }
+        print("Extraction error:", e)
+        return []
 
 
 def extract_loan_terms(pdf_file) -> tuple[dict, dict]:
     """
-    Extract all loan term fields from the PDF using conversational model.
-
+    Extract all loan term fields from the PDF using a single model call.
     Returns:
-        extracted: Dict[field] = value
-        quotes: Dict[field] = supporting quote
+        extracted: Dict[field_key] = value
+        quotes: Dict[field_key] = quote
     """
     text = extract_text_from_pdf(pdf_file)
-    # with open("raw_pdf_text.txt", "w") as f:
-    #     f.write(text)
+    field_results = ask_all_fields(text)
 
     extracted = {}
     quotes = {}
 
-    for field in FIELDS:
-        result = ask_field_info(text, field)
-
-        key = field.lower().replace(" ", "_")
-        extracted[key] = result["value"]
-        quotes[key] = result["quote"]
+    for result in field_results:
+        raw_key = result.get("key", "").strip().lower().replace(" ", "_")
+        extracted[raw_key] = result.get("value", "").strip()
+        quotes[raw_key] = result.get("quote", "").strip()
 
     return extracted, quotes
