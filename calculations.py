@@ -1,7 +1,8 @@
 import datetime
 from dateutil.relativedelta import relativedelta
 import matplotlib.pyplot as plt
-
+import numpy as np
+import math
 
 def compute_original_cashflow(data):
     start = datetime.datetime.strptime(data['effective_date'], "%Y-%m-%d")
@@ -119,6 +120,62 @@ def compute_prepayment_cashflow(data, principal_vector, interest_vector):
 
     return updated_principal_vector, interest_vector  # Interest not recalculated here
 
+
+
+def compute_break_funding_cost(
+    effective_date,
+    maturity_date,
+    frequency,
+    balance,
+    loan_rate,
+    amortization_type,
+    prepayment_date,
+    prepayment_amount
+):
+    import math
+
+    # Step 1: Compute original cashflows
+    data = {
+        'effective_date': effective_date,
+        'maturity_date': maturity_date,
+        'frequency': frequency,
+        'loan_rate': loan_rate,
+        'balance': balance,
+        'amortization_type': amortization_type,
+        'prepayment_date': prepayment_date,
+        'prepayment_amount': prepayment_amount,
+    }
+    original_principal, original_interest = compute_original_cashflow(data)
+
+    # Step 2: Compute adjusted cashflows (after prepayment)
+    adjusted_principal, adjusted_interest = compute_prepayment_cashflow(data, original_principal, original_interest)
+
+    # Step 3: Generate a fake SOFR curve for discounting
+    freq_map = {'monthly': 1, 'quarterly': 3, 'semiannual': 6, 'annual': 12}
+    months_per_period = freq_map[frequency.lower()]
+    num_periods = len(original_principal)
+
+    dt = datetime.datetime.strptime(prepayment_date, "%Y-%m-%d")
+    discount_factors = []
+    for i in range(num_periods):
+        future_date = dt + relativedelta(months=i * months_per_period)
+        t = (future_date - dt).days / 365.0
+        rate = 0.05 + 0.0005 * i  # Example fake SOFR curve
+        df = 1 / ((1 + rate) ** t)
+        discount_factors.append(df)
+
+    # Step 4: Compute NPV of original and adjusted cashflows
+    pv_original = sum(
+        (p + i) * df for p, i, df in zip(original_principal, original_interest, discount_factors)
+    )
+    pv_adjusted = sum(
+        (p + i) * df for p, i, df in zip(adjusted_principal, adjusted_interest, discount_factors)
+    )
+
+    # Step 5: Return break funding cost
+    return round(pv_original - pv_adjusted, 2)
+
+    
 
 def generate_cashflow_plot(data):
     # Step 1: Compute original and adjusted schedules

@@ -7,3 +7,4 @@ gunicorn
 torch
 transformers
 accelerate
+huggingface_hub

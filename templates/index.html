@@ -65,6 +65,13 @@
         <button type="submit">Calculate</button>
     </form>
 
+    {% if break_funding_cost is not none %}
+        <h3>Break Funding Cost</h3>
+        <p style="font-size: 1.25em; font-weight: bold;">
+            ${{ "%.2f"|format(break_funding_cost) }}
+        </p>
+    {% endif %}
+
     {% if plot_generated %}
         <h2>Cashflow Plot</h2>
         <img src="{{ url_for('static', filename='plot.png') }}" alt="Cashflow Plot">
