@@ -116,7 +116,6 @@ def index():
             for field in FIELDS:
                 data[field] = extracted.get(field, '')
 
-
             # Extracted values from the PDF or user input
             effective_date = normalize_date(extracted.get('effective_date', ''))
             balance = parse_amount(extracted.get('balance', ''))
@@ -143,7 +142,7 @@ def index():
                                 plot_generated=False,
                                 error_message=None,
                                 break_funding_cost=None,
-                                loading=True)  # Pass this flag
+                                loading=False)
 
         elif action == 'calculate':
             # # Continue to validate and compute results
