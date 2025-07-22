@@ -1,128 +1,319 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Quantitative Finance Break-Funding Tool</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BreakFunding.AI</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+
     <style>
-        label { font-weight: bold; display: block; margin-top: 15px; }
-        input, select { width: 200px; margin-bottom: 5px; }
-        small { color: gray; display: block; }
-        .error { color: red; font-weight: bold; margin-top: 20px; }
-        #quotes-display {
-            display: none;
-            background: #f9f9f9;
-            border: 1px solid #ccc;
-            padding: 10px;
-            max-height: 200px;
-            overflow: auto;
-            white-space: pre-wrap;
-            font-family: monospace;
-            margin-top: 10px;
-            margin-bottom: 15px;
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #f4f7fa;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo-row {
+            text-align: left;
+            margin-bottom: 10px;
+        }
+
+        .logo {
+            height: 45px;
+        }
+
+        .title-row {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: #012169;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .upload-row {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .upload-row input[type="file"] {
+            padding: 6px;
+        }
+
+        .upload-row button {
+            background-color: #E41E26;
+            color: white;
+            font-weight: bold;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        .upload-row button:hover {
+            background-color: #a3171a;
+        }
+
+        .disclaimer {
+            font-size: 0.9rem;
+            color: #6E6E6E;
+            margin-bottom: 25px;
+            line-height: 1.4;
+            background: #fefefe;
+            padding: 10px 15px;
+            border-left: 4px solid #E41E26;
+            border-radius: 4px;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .left-column,
+        .right-column {
+            flex: 1 1 48%;
+        }
+
+        label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 6px;
+            margin-top: 18px;
+            color: #012169;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 1rem;
+            border: 1.8px solid #cfd8dc;
+            border-radius: 6px;
+            background-color: #fafafa;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #E41E26;
+            background-color: #fff;
+            box-shadow: 0 0 5px rgba(228,30,38,0.3);
+            outline: none;
+        }
+
+        small {
+            color: #6E6E6E;
+            font-style: italic;
+            display: block;
+            margin-top: 3px;
+        }
+
+        .error {
+            color: #E41E26;
+            font-weight: 700;
+            background: #fdecea;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1.5px solid #E41E26;
+            text-align: center;
+        }
+
+        /* Shared button styling for Calculate and Download */
+        .main-button {
+            background-color: #012169;
+            color: white;
+            font-weight: bold;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 4px 12px rgba(1,33,105,0.3);
+        }
+
+        .main-button:hover {
+            background-color: #000b3b;
+        }
+
+        .break-funding-cost {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #012169;
+            background: #dbe9f7;
+            padding: 15px 20px;
+            border-radius: 6px;
+            box-shadow: 0 1px 5px rgba(1,33,105,0.3);
+            max-width: 100%;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            .left-column,
+            .right-column {
+                flex: 1 1 100%;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>Quantitative Finance Break-Funding Tool</h1>
+    <div class="container">
 
-    {% if error_message %}
-        <div class="error">⚠️ {{ error_message }}</div>
-    {% endif %}
-
-    <form method="POST" enctype="multipart/form-data">
-        {% if loading %}
-        <div style="margin: 10px 0; font-weight: bold; color: #555;">
-            ⏳ Extracting data from PDF, please wait...
+        <!-- Row 1: Logo -->
+        <div class="logo-row">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Bank_of_America_logo.svg" alt="Bank of America Logo" class="logo" />
         </div>
+
+        <!-- Row 2: Title -->
+        <div class="title-row">
+            <h1>BreakFunding.AI</h1>
+        </div>
+
+        <!-- Row 3: Upload input + button -->
+        <div class="upload-row">
+            <form method="POST" enctype="multipart/form-data">
+                <input type="file" name="pdf" accept=".pdf" required>
+                <button type="submit" name="action" value="upload" onclick="disableRequiredFields()">Upload</button>
+            </form>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="disclaimer">
+            <strong>Disclaimer:</strong> This website is created using publicly available information and language models. Uploading proprietary or confidential contracts is strictly prohibited.
+        </div>
+
+        {% if error_message %}
+            <div class="error">⚠️ {{ error_message }}</div>
         {% endif %}
 
-        <!-- Upload -->
-        <label for="pdf">Upload Term Sheet (PDF):</label>
-        <input type="file" name="pdf" accept=".pdf"><br><br>
+        <!-- Main Form and Output -->
+        <div class="main-content">
 
-        <!-- Upload button to show extracted quotes -->
-        <button type="submit" name="action" value="upload" onclick="disableRequiredFields()">Upload</button>
+            <!-- Inputs -->
+            <div class="left-column">
+                <form method="POST" enctype="multipart/form-data">
 
-        <!-- Effective Date -->
-        <label for="effective_date">Effective Date:</label>
-        <input type="date" id="effective_date" name="effective_date" value="{{ effective_date }}" required>
-        <small>{{ extracted_quotes.effective_date or '' }}</small>
+                    {% if loading %}
+                        <div style="margin: 10px 0; font-weight: bold; color: #555;">
+                            ⏳ Extracting data from PDF, please wait...
+                        </div>
+                    {% endif %}
 
-        <!-- Maturity Date -->
-        <label for="maturity_date">Maturity Date:</label>
-        <input type="date" name="maturity_date" value="{{ maturity_date }}" required>
-        <small>{{ extracted_quotes.maturity_date or '' }}</small>
+                    <label for="effective_date">Effective Date:</label>
+                    <input type="date" id="effective_date" name="effective_date" value="{{ effective_date }}" required>
+                    <small>{{ extracted_quotes.effective_date or '' }}</small>
 
-        <!-- Frequency -->
-        <label for="frequency">Frequency:</label>
-        <select name="frequency" required>
-            {% for f in ['monthly', 'quarterly', 'semiannual', 'annual'] %}
-                <option value="{{ f }}" {% if frequency == f %}selected{% endif %}>{{ f.capitalize() }}</option>
-            {% endfor %}
-        </select>
-        <small>{{ extracted_quotes.frequency or '' }}</small>
+                    <label for="maturity_date">Maturity Date:</label>
+                    <input type="date" name="maturity_date" value="{{ maturity_date }}" required>
+                    <small>{{ extracted_quotes.maturity_date or '' }}</small>
 
-        <!-- Amortization Type -->
-        <label for="amortization_type">Amortization Type:</label>
-        <select name="amortization_type" required>
-            {% for t in ['interest only', 'equal', 'linear', 'custom'] %}
-                <option value="{{ t }}" {% if amortization_type == t %}selected{% endif %}>{{ t.capitalize() }}</option>
-            {% endfor %}
-        </select>
-        <small>{{ extracted_quotes.amortization_type or '' }}</small>
+                    <label for="frequency">Frequency:</label>
+                    <select name="frequency" required>
+                        {% for f in ['monthly', 'quarterly', 'semiannual', 'annual'] %}
+                            <option value="{{ f }}" {% if frequency == f %}selected{% endif %}>{{ f.capitalize() }}</option>
+                        {% endfor %}
+                    </select>
+                    <small>{{ extracted_quotes.frequency or '' }}</small>
 
-        <!-- Loan Rate -->
-        <label for="loan_rate">Loan Rate (%):</label>
-        <input type="number" step="0.01" name="loan_rate" value="{{ loan_rate }}" required>
-        <small>{{ extracted_quotes.loan_rate or '' }}</small>
+                    <label for="amortization_type">Amortization Type:</label>
+                    <select name="amortization_type" required>
+                        {% for t in ['interest only', 'equal', 'linear', 'custom'] %}
+                            <option value="{{ t }}" {% if amortization_type == t %}selected{% endif %}>{{ t.capitalize() }}</option>
+                        {% endfor %}
+                    </select>
+                    <small>{{ extracted_quotes.amortization_type or '' }}</small>
 
-        <!-- Balance -->
-        <label for="balance">Balance:</label>
-        <input type="number" step="0.01" id="balance" name="balance" value="{{ balance }}" required>
-        <small>{{ extracted_quotes.balance or '' }}</small>
+                    <label for="loan_rate">Loan Rate (%):</label>
+                    <input type="number" step="0.01" name="loan_rate" value="{{ loan_rate }}" required>
+                    <small>{{ extracted_quotes.loan_rate or '' }}</small>
 
-        <!-- Prepayment Date -->
-        <label for="prepayment_date">Prepayment Date:</label>
-        <input type="date" id="prepayment_date" name="prepayment_date" value="{{ prepayment_date or '' }}" required>
+                    <label for="balance">Balance:</label>
+                    <input type="number" step="0.01" id="balance" name="balance" value="{{ balance }}" required>
+                    <small>{{ extracted_quotes.balance or '' }}</small>
 
-        <!-- Prepayment Amount -->
-        <label for="prepayment_amount">Prepayment Amount:</label>
-        <input type="number" step="0.01" id="prepayment_amount" name="prepayment_amount" value="{{ prepayment_amount or '' }}" required>
+                    <label for="prepayment_date">Prepayment Date:</label>
+                    <input type="date" id="prepayment_date" name="prepayment_date" value="{{ prepayment_date or '' }}" required>
 
+                    <label for="prepayment_amount">Prepayment Amount:</label>
+                    <input type="number" step="0.01" id="prepayment_amount" name="prepayment_amount" value="{{ prepayment_amount or '' }}" required>
 
-        <br><br>
-        <button type="submit" name="action" value="calculate">Calculate</button>
-    </form>
+                    <button type="submit" name="action" value="calculate" class="main-button">Calculate</button>
+                </form>
+            </div>
 
-    <form method="POST" action="/download_ppt" style="margin-top: 20px;">
-        <!-- Include hidden inputs to pass data to backend -->
-        <input type="hidden" name="effective_date" value="{{ effective_date }}">
-        <input type="hidden" name="maturity_date" value="{{ maturity_date }}">
-        <input type="hidden" name="loan_rate" value="{{ loan_rate }}">
-        <input type="hidden" name="balance" value="{{ balance }}">
-        <input type="hidden" name="break_funding_cost" value="{{ break_funding_cost or '' }}">
-        <button type="submit">Download PowerPoint Slide</button>
-    </form>
-    
-    {% if break_funding_cost is not none %}
-        <h3>Break Funding Cost</h3>
-        <p style="font-size: 1.25em; font-weight: bold;">
-            ${{ "%.2f"|format(break_funding_cost) }}
-        </p>
-    {% endif %}
+            <!-- Outputs -->
+            <div class="right-column">
+                {% if break_funding_cost is not none %}
+                    <h3>Break Funding Cost</h3>
+                    <div class="break-funding-cost">
+                        ${{ "%.2f"|format(break_funding_cost) }}
+                    </div>
+                {% endif %}
 
-    {% if plot_generated %}
-        <h2>Cashflow Plot</h2>
-        <img src="{{ url_for('static', filename='plot.png') }}" alt="Cashflow Plot">
-    {% endif %}
-    
-    
+                {% if plot_generated %}
+                    <h2>Original and Prepayment Cashflow</h2>
+                    <img src="{{ url_for('static', filename='plot.png') }}" alt="Cashflow Plot">
+
+                    <form method="POST" action="/download_ppt">
+                        <input type="hidden" name="effective_date" value="{{ effective_date }}">
+                        <input type="hidden" name="maturity_date" value="{{ maturity_date }}">
+                        <input type="hidden" name="loan_rate" value="{{ loan_rate }}">
+                        <input type="hidden" name="balance" value="{{ balance }}">
+                        <input type="hidden" name="break_funding_cost" value="{{ break_funding_cost or '' }}">
+                        <button type="submit" class="main-button">Download PowerPoint Slide</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <script>
         function disableRequiredFields() {
             const requiredFields = document.querySelectorAll("[required]");
             requiredFields.forEach(field => field.removeAttribute("required"));
         }
     </script>
-
 </body>
 </html>
