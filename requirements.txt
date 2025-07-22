@@ -5,3 +5,4 @@ python-dateutil
 huggingface_hub
 python-pptx
 requests
+gunicorn
