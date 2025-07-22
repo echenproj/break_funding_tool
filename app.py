@@ -1,6 +1,12 @@
 import os
 import re
+from io import BytesIO
+
 from flask import Flask, request, render_template
+from flask import send_file
+from pptx import Presentation
+from pptx.util import Inches, Pt
+
 from dateutil import parser
 
 from calculations import generate_cashflow_plot, compute_break_funding_cost
@@ -203,6 +209,59 @@ def index():
                            break_funding_cost=None,
                            error_message=None,
                            loading=False)
+
+
+@app.route('/download_ppt', methods=['POST'])
+def download_ppt():
+    # 1. Create a presentation
+    prs = Presentation()
+
+    # 2. Add a slide (Title and Content layout)
+    slide_layout = prs.slide_layouts[1]  # 0=Title slide, 1=Title and Content
+    slide = prs.slides.add_slide(slide_layout)
+
+    # 3. Set title
+    title = slide.shapes.title
+    title.text = "Break-Funding Analysis"
+
+    # 4. Add the plot image
+    img_path = "static/plot.png"  # Adjust path if needed
+    left = Inches(1)
+    top = Inches(1.5)
+    height = Inches(3)
+    slide.shapes.add_picture(img_path, left, top, height=height)
+
+    # 5. Add bullet points in the content placeholder
+    content_placeholder = slide.placeholders[1]
+    tf = content_placeholder.text_frame
+    tf.clear()  # Clear default text
+
+    bullets = [
+        "Effective Date: " + request.form.get('effective_date', ''),
+        "Maturity Date: " + request.form.get('maturity_date', ''),
+        "Loan Rate: " + request.form.get('loan_rate', ''),
+        "Balance: " + request.form.get('balance', ''),
+        "Break Funding Cost: " + (f"${float(request.form.get('break_funding_cost', 0)):.2f}" if request.form.get('break_funding_cost') else "N/A")
+    ]
+
+    for bullet in bullets:
+        p = tf.add_paragraph()
+        p.text = bullet
+        p.level = 0
+        p.font.size = Pt(14)
+
+    # 6. Save presentation to in-memory file
+    pptx_io = BytesIO()
+    prs.save(pptx_io)
+    pptx_io.seek(0)
+
+    # 7. Send the pptx file as a download
+    return send_file(
+        pptx_io,
+        mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        as_attachment=True,
+        download_name='break_funding_analysis.pptx'
+    )
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))

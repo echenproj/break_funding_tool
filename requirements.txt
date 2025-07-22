@@ -8,3 +8,4 @@ torch
 transformers
 accelerate
 huggingface_hub
+python-pptx

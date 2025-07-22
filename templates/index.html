@@ -94,7 +94,16 @@
         <button type="submit" name="action" value="calculate">Calculate</button>
     </form>
 
-
+    <form method="POST" action="/download_ppt" style="margin-top: 20px;">
+        <!-- Include hidden inputs to pass data to backend -->
+        <input type="hidden" name="effective_date" value="{{ effective_date }}">
+        <input type="hidden" name="maturity_date" value="{{ maturity_date }}">
+        <input type="hidden" name="loan_rate" value="{{ loan_rate }}">
+        <input type="hidden" name="balance" value="{{ balance }}">
+        <input type="hidden" name="break_funding_cost" value="{{ break_funding_cost or '' }}">
+        <button type="submit">Download PowerPoint Slide</button>
+    </form>
+    
     {% if break_funding_cost is not none %}
         <h3>Break Funding Cost</h3>
         <p style="font-size: 1.25em; font-weight: bold;">
