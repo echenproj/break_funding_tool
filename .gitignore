@@ -1,0 +1,22 @@
+# Ignore Python cache files and folders
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Ignore sample data or test PDFs
+samples/
+ignore/
+
+# Ignore virtual environment if you have one
+venv/
+.env/
+
+# Ignore OS or editor files
+.DS_Store
+*.swp
+*.swo
+*.log
+
+# Ignore build/deployment artifacts (optional)
+*.pptx
+static/plot.png
