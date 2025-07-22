@@ -30,16 +30,18 @@
     {% endif %}
 
     <form method="POST" enctype="multipart/form-data">
+        {% if loading %}
+        <div style="margin: 10px 0; font-weight: bold; color: #555;">
+            ⏳ Extracting data from PDF, please wait...
+        </div>
+        {% endif %}
+
         <!-- Upload -->
         <label for="pdf">Upload Term Sheet (PDF):</label>
         <input type="file" name="pdf" accept=".pdf"><br><br>
 
         <!-- Upload button to show extracted quotes -->
-        <button type="submit" name="action" value="upload">Upload</button>
-
-        <!-- Container to display extracted quotes, hidden by default -->
-        <!-- <pre id="quotes-display" style="display:none; background:#f9f9f9; border:1px solid #ccc; padding:10px; max-height:200px; overflow:auto;"></pre> -->
-
+        <button type="submit" name="action" value="upload" onclick="disableRequiredFields()">Upload</button>
 
         <!-- Effective Date -->
         <label for="effective_date">Effective Date:</label>
@@ -91,11 +93,6 @@
         <button type="submit" name="action" value="calculate">Calculate</button>
     </form>
 
-    <!-- {% if debug_effective_date %}
-    <p style="margin-top: 20px; font-style: italic; color: darkgreen;">
-        Extracted Effective Date: {{ debug_effective_date }}
-    </p>
-    {% endif %} -->
 
     {% if break_funding_cost is not none %}
         <h3>Break Funding Cost</h3>
@@ -108,22 +105,14 @@
         <h2>Cashflow Plot</h2>
         <img src="{{ url_for('static', filename='plot.png') }}" alt="Cashflow Plot">
     {% endif %}
-<!-- 
+    
+    
     <script>
-    document.getElementById('show-quotes-btn').addEventListener('click', function() {
-        const displayDiv = document.getElementById('quotes-display');
-        if (displayDiv.style.display === 'none') {
-            // Show and populate the quotes display with pretty JSON
-            const quotes = {{ extracted_quotes | tojson }};
-            displayDiv.textContent = JSON.stringify(quotes, null, 2);
-            displayDiv.style.display = 'block';
-            this.textContent = 'Hide Extracted Quotes';
-        } else {
-            // Hide the quotes display
-            displayDiv.style.display = 'none';
-            this.textContent = 'Upload';
+        function disableRequiredFields() {
+            const requiredFields = document.querySelectorAll("[required]");
+            requiredFields.forEach(field => field.removeAttribute("required"));
         }
-    }); -->
     </script>
+
 </body>
 </html>
