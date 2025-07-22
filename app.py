@@ -1,13 +1,14 @@
 import os
 import re
-from io import BytesIO
+from dateutil import parser
 
 from flask import Flask, request, render_template
 from flask import send_file
+from io import BytesIO
 from pptx import Presentation
 from pptx.util import Inches, Pt
-
-from dateutil import parser
+from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
+from pptx.dml.color import RGBColor
 
 from calculations import generate_cashflow_plot, compute_break_funding_cost
 from extract_from_pdf import extract_loan_terms
@@ -212,51 +213,86 @@ def index():
 
 @app.route('/download_ppt', methods=['POST'])
 def download_ppt():
-    # 1. Create a presentation
+    # 1. Create presentation
     prs = Presentation()
+    blank_slide_layout = prs.slide_layouts[6]  # Blank layout
+    slide = prs.slides.add_slide(blank_slide_layout)
 
-    # 2. Add a slide (Title and Content layout)
-    slide_layout = prs.slide_layouts[1]  # 0=Title slide, 1=Title and Content
-    slide = prs.slides.add_slide(slide_layout)
+    # 2. Add title
+    title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(8), Inches(1))
+    title_tf = title_box.text_frame
+    title_p = title_tf.paragraphs[0]
+    title_run = title_p.add_run()
+    title_run.text = "Break-Funding Analysis"
+    title_run.font.size = Pt(32)
+    title_run.font.bold = True
+    title_run.font.color.rgb = RGBColor(0, 0, 0)
 
-    # 3. Set title
-    title = slide.shapes.title
-    title.text = "Break-Funding Analysis"
+    # 3. Add subtitle
+    subtitle_box = slide.shapes.add_textbox(Inches(0.5), Inches(1), Inches(9), Inches(0.5))
+    subtitle_tf = subtitle_box.text_frame
+    subtitle_p = subtitle_tf.paragraphs[0]
+    subtitle_run = subtitle_p.add_run()
+    subtitle_run.text = "The following summarizes key loan details:"
+    subtitle_run.font.size = Pt(20)
+    subtitle_run.font.bold = True
+    subtitle_run.font.color.rgb = RGBColor(0, 112, 192)  # Bank of America Blue
 
-    # 4. Add the plot image
-    img_path = "static/plot.png"  # Adjust path if needed
-    left = Inches(1)
-    top = Inches(1.5)
-    height = Inches(3)
-    slide.shapes.add_picture(img_path, left, top, height=height)
+    # 4. Add loan details (bullets)
+    loan_textbox = slide.shapes.add_textbox(Inches(0.5), Inches(1.4), Inches(4.5), Inches(2))
+    loan_tf = loan_textbox.text_frame
+    loan_tf.clear()
 
-    # 5. Add bullet points in the content placeholder
-    content_placeholder = slide.placeholders[1]
-    tf = content_placeholder.text_frame
-    tf.clear()  # Clear default text
-
-    bullets = [
-        "Effective Date: " + request.form.get('effective_date', ''),
-        "Maturity Date: " + request.form.get('maturity_date', ''),
-        "Loan Rate: " + request.form.get('loan_rate', ''),
-        "Balance: " + request.form.get('balance', ''),
-        "Break Funding Cost: " + (f"${float(request.form.get('break_funding_cost', 0)):.2f}" if request.form.get('break_funding_cost') else "N/A")
+    bullet_items = [
+        ("Effective Date", request.form.get('effective_date', '')),
+        ("Maturity Date", request.form.get('maturity_date', '')),
+        ("Loan Rate", f"{request.form.get('loan_rate', '')}%"),
+        ("Balance", f"${request.form.get('balance', '')}"),
     ]
 
-    for bullet in bullets:
-        p = tf.add_paragraph()
-        p.text = bullet
+    for label, value in bullet_items:
+        p = loan_tf.add_paragraph()
+        run = p.add_run()
+        run.text = f"{label}: {value}"
+        run.font.size = Pt(18)
+        run.font.color.rgb = RGBColor(0, 0, 0)
         p.level = 0
-        p.font.size = Pt(14)
 
-    # 6. Save presentation to in-memory file
-    pptx_io = BytesIO()
-    prs.save(pptx_io)
-    pptx_io.seek(0)
+    # 5. Break Funding Cost
+    break_cost = request.form.get('break_funding_cost')
+    if break_cost:
+        cost_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.2), Inches(6), Inches(0.5))
+        cost_tf = cost_box.text_frame
+        cost_tf.clear()
+        p = cost_tf.paragraphs[0]
+        run = p.add_run()
+        run.text = f"Break-Funding Cost: ${float(break_cost):,.2f}"
+        run.font.size = Pt(20)
+        run.font.bold = True
+        run.font.color.rgb = RGBColor(0, 0, 0)
 
-    # 7. Send the pptx file as a download
+    # 6. Add chart image (bottom)
+    img_path = "static/plot.png"
+    img_height = Inches(3.5)
+    img_width = Inches(7)
+    img_top = prs.slide_height - img_height - Inches(0.3)
+    img_left = (prs.slide_width - img_width) / 2
+    slide.shapes.add_picture(img_path, img_left, img_top, width=img_width, height=img_height)
+
+    # 7. Add logo (top-right)
+    logo_path = "static/logo.png"
+    logo_width = Inches(1.5)
+    logo_top = Inches(0.2)
+    logo_left = prs.slide_width - logo_width - Inches(0.3)
+    slide.shapes.add_picture(logo_path, logo_left, logo_top, width=logo_width)
+
+    # 8. Save presentation to memory
+    ppt_io = BytesIO()
+    prs.save(ppt_io)
+    ppt_io.seek(0)
+
     return send_file(
-        pptx_io,
+        ppt_io,
         mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation',
         as_attachment=True,
         download_name='break_funding_analysis.pptx'

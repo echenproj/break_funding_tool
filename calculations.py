@@ -1,8 +1,12 @@
 import datetime
 from dateutil.relativedelta import relativedelta
-import matplotlib.pyplot as plt
-import numpy as np
 import math
+import numpy as np
+
+
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+
 
 def compute_original_cashflow(data):
     start = datetime.datetime.strptime(data['effective_date'], "%Y-%m-%d")
@@ -185,11 +189,10 @@ def generate_cashflow_plot(data):
     # Step 2: Compute stacked components
     prepaid_principal = [orig - adj for orig, adj in zip(original_principal, adjusted_principal)]
     remaining_principal = adjusted_principal
-
-    prepaid_interest = [0] * len(original_interest)  # Optional: implement recalculation
+    prepaid_interest = [0] * len(original_interest)
     remaining_interest = adjusted_interest
 
-    # Step 3: Build date labels for X-axis
+    # Step 3: Build date labels
     start = datetime.datetime.strptime(data['effective_date'], "%Y-%m-%d")
     end = datetime.datetime.strptime(data['maturity_date'], "%Y-%m-%d")
     freq_map = {'monthly': 1, 'quarterly': 3, 'semiannual': 6, 'annual': 12}
@@ -206,25 +209,50 @@ def generate_cashflow_plot(data):
     x = range(len(original_principal))
     labels = dates[:len(original_principal)]
 
-    # Step 4: Plot stacked bars
-    plt.figure(figsize=(14, 6))
-    plt.bar(x, prepaid_interest, label='Prepaid Interest', color='lightblue')
-    plt.bar(x, prepaid_principal, bottom=prepaid_interest, label='Prepaid Principal', color='lightskyblue')
-    plt.bar(x, remaining_interest, bottom=[pi + pp for pi, pp in zip(prepaid_interest, prepaid_principal)],
-            label='Remaining Interest', color='orange')
-    plt.bar(
-        x,
-        remaining_principal,
+    # Step 4: Plot
+    plt.style.use('ggplot')
+    fig, ax = plt.subplots(figsize=(18, 10))
+
+    # Professional muted color palette
+    colors = {
+        'Prepaid Interest': '#c6d9ec',
+        'Prepaid Principal': '#6baed6',
+        'Remaining Interest': '#fdbf6f',
+        'Remaining Principal': '#e6550d',
+    }
+
+    ax.bar(x, prepaid_interest, label='Prepaid Interest', color=colors['Prepaid Interest'])
+    ax.bar(x, prepaid_principal, bottom=prepaid_interest, label='Prepaid Principal', color=colors['Prepaid Principal'])
+    ax.bar(
+        x, 
+        remaining_interest, 
+        bottom=[pi + pp for pi, pp in zip(prepaid_interest, prepaid_principal)],
+        label='Remaining Interest', 
+        color=colors['Remaining Interest']
+    )
+    ax.bar(
+        x, 
+        remaining_principal, 
         bottom=[pi + pp + ri for pi, pp, ri in zip(prepaid_interest, prepaid_principal, remaining_interest)],
-        label='Remaining Principal',
-        color='tomato'
+        label='Remaining Principal', 
+        color=colors['Remaining Principal']
     )
 
-    plt.xticks(ticks=x, labels=labels, rotation=45, ha='right')
-    plt.xlabel("Payment Period")
-    plt.ylabel("Amount")
-    plt.title("Loan Cashflow Breakdown: Prepaid & Remaining")
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig("static/plot.png")
+    # Larger, business-style fonts
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, rotation=-90, ha='right', fontsize=24)
+    ax.set_xlabel("Payment Period", fontsize=26, weight='bold', labelpad=22)
+    ax.set_ylabel("Amount ($)", fontsize=26, weight='bold', labelpad=22)
+    ax.tick_params(axis='y', labelsize=24)
+
+    ax.yaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))
+    ax.legend(fontsize=14, loc='upper right', frameon=False)
+
+    # Reduce grid clutter
+    ax.grid(True, which='major', axis='y', linestyle='--', linewidth=0.5, alpha=0.6)
+    ax.grid(False, axis='x')
+
+    # Tight and clean layout
+    plt.tight_layout(pad=2.0)
+    plt.savefig("static/plot.png", dpi=300, bbox_inches='tight')
     plt.close()

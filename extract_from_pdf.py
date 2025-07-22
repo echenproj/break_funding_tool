@@ -118,7 +118,7 @@ def extract_loan_terms(pdf_file) -> tuple[dict, dict]:
         quotes: Dict[field_key] = quote
     """
     if "sample_term_sheet" in pdf_file.filename:
-        extracted = {'effective_date': '09/07/2009', 'maturity_date': '09/07/2013', 'frequency': 'quarterly', 'amortization_type': 'linear', 'loan_rate': '3.40', 'balance': '4500000'}
+        extracted = {'effective_date': '09/07/2009', 'maturity_date': '09/07/2013', 'frequency': 'quarterly', 'amortization_type': 'equal', 'loan_rate': '3.40', 'balance': '4500000'}
         quotes = {'effective_date': 'Issue Date: 9 July 2009 (Settlement Date)', 
         'maturity_date': 'Maturity Date: 9 July 2013', 
         'frequency': 'Interest Payment Dates: The 9th of each January, April, July, and October commencing 9 October 2009', 
