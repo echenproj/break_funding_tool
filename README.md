@@ -1,4 +1,3 @@
-# Save this as create_readme.py and run it with Python
 # 💼 BreakFunding.AI
 
 **BreakFunding.AI** is a Flask web application that allows users to upload loan term sheets (PDF), automatically extract key terms using an LLM, and calculate break-funding costs with a visualized cashflow chart. Users can also export the results to a PowerPoint slide.
@@ -66,6 +65,9 @@ export HF_TOKEN=your_huggingface_token
 ```bash
 python app.py
 ```
+
+---
+
 Visit http://localhost:5000 in your browser.
 
 Local Command: gunicorn app:app
