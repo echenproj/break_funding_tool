@@ -1,4 +1,5 @@
 import os
+import re
 from flask import Flask, request, render_template
 from dateutil import parser
 
@@ -14,6 +15,11 @@ FIELDS = [
 ]
 
 def safe_field(field_name, extracted, form):
+    """
+    The safe_field() function is a helper that prioritizes user input, but falls back 
+    to extracted values (like from a PDF), and if neither is available, returns a 
+    blank string.
+    """
     user_val = form.get(field_name)
     extracted_val = extracted.get(field_name, "")
     if user_val is not None and user_val.strip() != "":
@@ -71,6 +77,17 @@ def normalize_amortization_type(amt_str):
     return mapping.get(amt_str, '')
 
 
+# Normalize/parse balance as float (handle commas, $ signs)
+def parse_amount(s):
+    if not s:
+        return None
+    s = re.sub(r'[^\d.]', '', s)
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     extracted = {}
@@ -93,11 +110,24 @@ def index():
             for field in FIELDS:
                 data[field] = extracted.get(field, '')
 
-            # Leave prepayment fields empty
-            data['prepayment_date'] = ''
-            data['prepayment_amount'] = ''
 
-            data['effective_date'] = normalize_date(extracted.get('effective_date', ''))
+            # Extracted values from the PDF or user input
+            effective_date = normalize_date(extracted.get('effective_date', ''))
+            balance = parse_amount(extracted.get('balance', ''))
+
+            # Set Prepayment Date default to Effective Date if missing
+            if effective_date != "":
+                prepayment_date = effective_date
+
+            # Set Prepayment Amount default to half Balance if missing and Balance is valid
+            if balance != "":
+                prepayment_amount = float(balance / 2)
+
+            # Leave prepayment fields empty
+            data['prepayment_date'] = prepayment_date or ''
+            data['prepayment_amount'] = prepayment_amount or ''
+
+            data['effective_date'] = effective_date
             data['maturity_date'] = normalize_date(extracted.get('maturity_date', ''))
             data['frequency'] = normalize_frequency(safe_field('frequency', extracted, request.form))
             data['amortization_type'] = normalize_amortization_type(safe_field('amortization_type', extracted, request.form))
@@ -110,10 +140,10 @@ def index():
                                 loading=True)  # Pass this flag
 
         elif action == 'calculate':
-            # Continue to validate and compute results
-            pdf_file = request.files.get('pdf')
-            if pdf_file and pdf_file.filename.endswith('.pdf'):
-                extracted, extracted_quotes = extract_loan_terms(pdf_file)
+            # # Continue to validate and compute results
+            # pdf_file = request.files.get('pdf')
+            # if pdf_file and pdf_file.filename.endswith('.pdf'):
+            #     extracted, extracted_quotes = extract_loan_terms(pdf_file)
 
             # Use safe_field to prioritize user input
             for field in FIELDS:
@@ -122,11 +152,10 @@ def index():
             data['prepayment_date'] = request.form.get('prepayment_date', '').strip()
             data['prepayment_amount'] = request.form.get('prepayment_amount', '').strip()
 
-            data['effective_date'] = normalize_date(extracted.get('effective_date', ''))
-            data['maturity_date'] = normalize_date(extracted.get('maturity_date', ''))
+            data['effective_date'] = normalize_date(safe_field('effective_date', extracted, request.form))
+            data['maturity_date'] = normalize_date(safe_field('maturity_date', extracted, request.form))
             data['frequency'] = normalize_frequency(safe_field('frequency', extracted, request.form))
             data['amortization_type'] = normalize_amortization_type(safe_field('amortization_type', extracted, request.form))
-
 
             required_fields = FIELDS + ['prepayment_date', 'prepayment_amount']
             if all(data.get(f) not in (None, '', 'None') for f in required_fields):
