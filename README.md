@@ -29,12 +29,19 @@
 
 ## 📁 Project Structure
 break_funding_tool/
+
 ├── app.py # Flask app
+
 ├── calculations.py # Cashflow and cost logic
+
 ├── extract_from_pdf.py # PDF parsing + LLM field extraction
+
 ├── requirements.txt # Dependencies
+
 ├── static/ # Images (plot, logos)
+
 ├── templates/ # HTML UI (Jinja2)
+
 └── README.md
 
 ---
