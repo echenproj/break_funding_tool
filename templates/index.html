@@ -221,9 +221,11 @@
 
         <!-- Disclaimer -->
         <div class="disclaimer">
-            <strong>Disclaimer:</strong> This website is created using publicly available information and language models. Uploading proprietary or confidential contracts is strictly prohibited.
+            <strong>Disclaimer:</strong> This website is created using publicly available information and large language models.  
+            It is intended solely for research and demonstration purposes. Uploading proprietary or confidential contracts is strictly prohibited.  
+            This site is not affiliated with or endorsed by Bank of America or any financial institution.
         </div>
-
+        
         {% if error_message %}
             <div class="error">⚠️ {{ error_message }}</div>
         {% endif %}
@@ -303,7 +305,7 @@
                     <form method="POST">
                         <label for="user_input">Enter your question:</label>
                         <textarea name="user_input" rows="4"
-                                placeholder="e.g., Explain the impact of prepayment on cost..."
+                                placeholder="e.g., Explain break-funding impact..."
                                 style="width: 100%; padding: 10px; font-size: 1rem;">{{ request.form.user_input or '' }}</textarea>
 
                         <!-- Hidden Fields to Preserve State -->
@@ -319,7 +321,7 @@
                         <input type="hidden" name="break_funding_cost" value="{{ break_funding_cost }}">
 
                         <!-- Button Row -->
-                        <div style="display: flex; gap: 12px; margin-top: 12px;">
+                        <div style="display: flex; gap: 12px; margin-top: 22px;">
                             <button type="submit" name="action" value="chat"
                                     style="background-color: #E41E26; color: white; font-weight: bold;
                                         border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer;">

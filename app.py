@@ -11,7 +11,7 @@ from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
 from pptx.dml.color import RGBColor
 
 from calculations import generate_cashflow_plot, compute_break_funding_cost
-from extract_from_pdf import extract_loan_terms
+from extract_from_pdf import extract_loan_terms, chat_reply
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -203,17 +203,6 @@ def index():
             # Validate and normalize
             data['prepayment_date'] = request.form.get('prepayment_date', '').strip()
             data['prepayment_amount'] = request.form.get('prepayment_amount', '').strip()
-            
-            # LLM response only
-            user_input = request.form.get('user_input', '')
-            response_text = None
-            if user_input.strip():
-                try:
-                    # result = chatbot(user_input, max_new_tokens=100, do_sample=True)
-                    # response_text = result[0]['generated_text']
-                    response_text = 'test'
-                except Exception as e:
-                    error_message = f"LLM Error: {e}"
 
             # Preserve previous outputs (pass them through the hidden fields)
             plot_generated = request.form.get('plot_generated') == 'True'
@@ -221,6 +210,15 @@ def index():
                 break_funding_cost = float(request.form.get('break_funding_cost', 0))
             except (TypeError, ValueError):
                 break_funding_cost = None
+
+            # LLM response only
+            user_input = request.form.get('user_input', '')
+            response_text = None
+            if user_input.strip():
+                try:
+                    response_text = chat_reply(user_input, break_funding_cost)
+                except Exception as e:
+                    error_message = f"LLM Error: {e}"
 
             return render_template('index.html', **data,
                                 extracted_quotes=extracted_quotes,
@@ -337,6 +335,6 @@ def download_ppt():
     )
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=True, host='0.0.0.0', port=port)
-    # app.run(debug=False, host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
+    # port = int(os.environ.get("PORT", 5000))
+    # app.run(debug=True, host='0.0.0.0', port=port)
+    app.run(debug=False, host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
