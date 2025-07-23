@@ -150,7 +150,7 @@ def contains_any(text, keywords):
 
 def chat_reply(user_input, break_funding_cost):
     ftp_keywords = ["ftp", "fund transfer pricing", "transfer price", "transfer pricing"]
-    break_funding_keywords = ["break-funding", "break funding", "break cost", "prepay penalty"]
+    break_funding_keywords = ["break-funding", "break funding", "break cost", "prepay penalty", "breakfund", "break-fund", "break fund"]
     impact_keywords = ["impact", "cost", "effect", "calculate", "calculation", "savings", "reduction"]
     irrelevant_keywords = ["car", "color", "colour", "weather"]
     try:
