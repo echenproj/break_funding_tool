@@ -323,21 +323,14 @@
                         <!-- Button Row -->
                         <div style="display: flex; gap: 12px; margin-top: 22px;">
                             <button type="submit" name="action" value="chat"
-                                    style="background-color: #E41E26; color: white; font-weight: bold;
-                                        border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer;">
+                                    style="background-color: #E41E26; color: white; font-weight: bold; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer;">
                                 Ask LLM
                             </button>
 
-                            <form method="POST" action="/download_ppt">
-                                <input type="hidden" name="effective_date" value="{{ effective_date }}">
-                                <input type="hidden" name="maturity_date" value="{{ maturity_date }}">
-                                <input type="hidden" name="loan_rate" value="{{ loan_rate }}">
-                                <input type="hidden" name="balance" value="{{ balance }}">
-                                <input type="hidden" name="break_funding_cost" value="{{ break_funding_cost or '' }}">
-                                <button type="submit" class="main-button" style="margin: 0;">
-                                    Download PowerPoint Slide
-                                </button>
-                            </form>
+                            <button type="submit" name="action" value="download_ppt"
+                                    style="background-color: #012169; color: white; font-weight: bold; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer;">
+                                Download PowerPoint Slide
+                            </button>
                         </div>
                     </form>
 

@@ -193,6 +193,27 @@ def index():
                                    break_funding_cost=break_funding_cost,
                                    loading=False,
                                    response_text=None)
+        elif action == 'download_ppt':
+            for field in FIELDS:
+                data[field] = request.form.get(field, '').strip()
+
+            data['prepayment_date'] = request.form.get('prepayment_date', '').strip()
+            data['prepayment_amount'] = request.form.get('prepayment_amount', '').strip()
+
+            # Validate and normalize
+            data['prepayment_date'] = request.form.get('prepayment_date', '').strip()
+            data['prepayment_amount'] = request.form.get('prepayment_amount', '').strip()
+
+            # Preserve previous outputs (pass them through the hidden fields)
+            plot_generated = request.form.get('plot_generated') == 'True'
+            try:
+                break_funding_cost = float(request.form.get('break_funding_cost', 0))
+            except (TypeError, ValueError):
+                break_funding_cost = None
+
+            # Handle download logic here, with access to all data from the form
+            return download_ppt()
+
         elif action == 'chat':
             for field in FIELDS:
                 data[field] = request.form.get(field, '').strip()
