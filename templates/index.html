@@ -296,14 +296,57 @@
                     <h2>Original and Prepayment Cashflow</h2>
                     <img src="{{ url_for('static', filename='plot.png') }}" alt="Cashflow Plot">
 
-                    <form method="POST" action="/download_ppt">
+                    <!-- LLM Section -->
+                    <hr style="margin: 30px 0;">
+                    <h2>Ask the LLM</h2>
+
+                    <form method="POST">
+                        <label for="user_input">Enter your question:</label>
+                        <textarea name="user_input" rows="4"
+                                placeholder="e.g., Explain the impact of prepayment on cost..."
+                                style="width: 100%; padding: 10px; font-size: 1rem;">{{ request.form.user_input or '' }}</textarea>
+
+                        <!-- Hidden Fields to Preserve State -->
                         <input type="hidden" name="effective_date" value="{{ effective_date }}">
                         <input type="hidden" name="maturity_date" value="{{ maturity_date }}">
+                        <input type="hidden" name="frequency" value="{{ frequency }}">
+                        <input type="hidden" name="amortization_type" value="{{ amortization_type }}">
                         <input type="hidden" name="loan_rate" value="{{ loan_rate }}">
                         <input type="hidden" name="balance" value="{{ balance }}">
-                        <input type="hidden" name="break_funding_cost" value="{{ break_funding_cost or '' }}">
-                        <button type="submit" class="main-button">Download PowerPoint Slide</button>
+                        <input type="hidden" name="prepayment_date" value="{{ prepayment_date }}">
+                        <input type="hidden" name="prepayment_amount" value="{{ prepayment_amount }}">
+                        <input type="hidden" name="plot_generated" value="{{ plot_generated }}">
+                        <input type="hidden" name="break_funding_cost" value="{{ break_funding_cost }}">
+
+                        <!-- Button Row -->
+                        <div style="display: flex; gap: 12px; margin-top: 12px;">
+                            <button type="submit" name="action" value="chat"
+                                    style="background-color: #E41E26; color: white; font-weight: bold;
+                                        border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer;">
+                                Ask LLM
+                            </button>
+
+                            <form method="POST" action="/download_ppt">
+                                <input type="hidden" name="effective_date" value="{{ effective_date }}">
+                                <input type="hidden" name="maturity_date" value="{{ maturity_date }}">
+                                <input type="hidden" name="loan_rate" value="{{ loan_rate }}">
+                                <input type="hidden" name="balance" value="{{ balance }}">
+                                <input type="hidden" name="break_funding_cost" value="{{ break_funding_cost or '' }}">
+                                <button type="submit" class="main-button" style="margin: 0;">
+                                    Download PowerPoint Slide
+                                </button>
+                            </form>
+                        </div>
                     </form>
+
+                    {% if response_text %}
+                        <div style="margin-top: 20px; background: #eef4fb; padding: 15px 20px;
+                                    border-left: 4px solid #012169; border-radius: 6px;">
+                            <strong>LLM Response:</strong>
+                            <p>{{ response_text }}</p>
+                        </div>
+                    {% endif %}
+
                 {% endif %}
             </div>
         </div>

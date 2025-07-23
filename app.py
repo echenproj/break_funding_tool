@@ -103,6 +103,7 @@ def index():
     plot_generated = False
     break_funding_cost = None
     error_message = None
+    response_text=None
 
     if request.method == 'POST':
         action = request.form.get('action')  # Check whether it's 'upload' or 'calculate'
@@ -143,13 +144,10 @@ def index():
                                 plot_generated=False,
                                 error_message=None,
                                 break_funding_cost=None,
-                                loading=False)
+                                loading=False,
+                                response_text=None)
 
         elif action == 'calculate':
-            # # Continue to validate and compute results
-            # pdf_file = request.files.get('pdf')
-            # if pdf_file and pdf_file.filename.endswith('.pdf'):
-            #     extracted, extracted_quotes = extract_loan_terms(pdf_file)
 
             # Use safe_field to prioritize user input
             for field in FIELDS:
@@ -176,7 +174,8 @@ def index():
                                            plot_generated=False,
                                            error_message=error_message,
                                            break_funding_cost=None,
-                                           loading=False)
+                                           loading=False,
+                                           response_text=None)
                 try:
                     generate_cashflow_plot(data)
                     break_funding_cost = compute_break_funding_cost(**data)
@@ -192,7 +191,45 @@ def index():
                                    plot_generated=plot_generated,
                                    error_message=error_message,
                                    break_funding_cost=break_funding_cost,
-                                   loading=False)
+                                   loading=False,
+                                   response_text=None)
+        elif action == 'chat':
+            for field in FIELDS:
+                data[field] = request.form.get(field, '').strip()
+
+            data['prepayment_date'] = request.form.get('prepayment_date', '').strip()
+            data['prepayment_amount'] = request.form.get('prepayment_amount', '').strip()
+
+            # Validate and normalize
+            data['prepayment_date'] = request.form.get('prepayment_date', '').strip()
+            data['prepayment_amount'] = request.form.get('prepayment_amount', '').strip()
+            
+            # LLM response only
+            user_input = request.form.get('user_input', '')
+            response_text = None
+            if user_input.strip():
+                try:
+                    # result = chatbot(user_input, max_new_tokens=100, do_sample=True)
+                    # response_text = result[0]['generated_text']
+                    response_text = 'test'
+                except Exception as e:
+                    error_message = f"LLM Error: {e}"
+
+            # Preserve previous outputs (pass them through the hidden fields)
+            plot_generated = request.form.get('plot_generated') == 'True'
+            try:
+                break_funding_cost = float(request.form.get('break_funding_cost', 0))
+            except (TypeError, ValueError):
+                break_funding_cost = None
+
+            return render_template('index.html', **data,
+                                extracted_quotes=extracted_quotes,
+                                plot_generated=plot_generated,
+                                break_funding_cost=break_funding_cost,
+                                error_message=error_message,
+                                response_text=response_text,
+                                loading=False)
+
 
     # GET request
     return render_template("index.html",
@@ -208,7 +245,8 @@ def index():
                            plot_generated=False,
                            break_funding_cost=None,
                            error_message=None,
-                           loading=False)
+                           loading=False,
+                           response_text=None)
 
 
 @app.route('/download_ppt', methods=['POST'])
@@ -299,6 +337,6 @@ def download_ppt():
     )
 
 if __name__ == '__main__':
-    # port = int(os.environ.get("PORT", 5000))
-    # app.run(debug=True, host='0.0.0.0', port=port)
-    app.run(debug=False, host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, host='0.0.0.0', port=port)
+    # app.run(debug=False, host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
