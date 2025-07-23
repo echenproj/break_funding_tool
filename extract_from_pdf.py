@@ -152,9 +152,15 @@ def chat_reply(user_input, break_funding_cost):
     ftp_keywords = ["ftp", "fund transfer pricing", "transfer price", "transfer pricing"]
     break_funding_keywords = ["break-funding", "break funding", "break cost", "prepay penalty"]
     impact_keywords = ["impact", "cost", "effect", "calculate", "calculation", "savings", "reduction"]
+    irrelevant_keywords = ["car", "color", "colour", "weather"]
     try:
         text = user_input.lower().strip()
-        if contains_any(text, impact_keywords):
+        if contains_any(text, irrelevant_keywords):
+            response_text = (
+                "I'm an expert in bank treasury finance and I'm here to answer your questions related to break-funding and fund transfer pricing. I'm sorry, but I cannot answer your question as it is not related to my area of expertise."
+            )
+            return response_text
+        elif contains_any(text, impact_keywords):
             response_text = (
                     "The calculation separates the loan’s interest into two parts: "
                     "interest accrued before the prepayment date and interest accruing after. "
